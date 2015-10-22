@@ -1,69 +1,117 @@
-// Include gulp
-var gulp    = require('gulp');
+// Gulp Dependencies
+var gulp = require('gulp');
+var rename = require('gulp-rename');
+var hbsfy = require("hbsfy");
 
-// Include Our Plugins
-var browserSync   = require('browser-sync').create();
-var browserify    = require('browserify');
-var source        = require('vinyl-source-stream');
-var buffer        = require('vinyl-buffer');
+// Build Dependencies
+var browserSync = require('browser-sync').create();
+var browserify = require('gulp-browserify');
+var uglify = require('gulp-uglify');
+var concat = require('gulp-concat');
 
-var jshint  = require('gulp-jshint');
-var sass    = require('gulp-sass');
-var concat  = require('gulp-concat');
-var uglify  = require('gulp-uglify');
-var rename  = require('gulp-rename');
+// Style Dependencies
+var imagemin = require('gulp-imagemin');
+var sass = require('gulp-sass');
 
-// Lint Task
-gulp.task('lint', function() {
-    return gulp.src('./app/scripts/*.js')
-        .pipe(jshint())
-        .pipe(jshint.reporter('default'));
+// Development Dependencies
+var jshint = require('gulp-jshint');
+
+// Test Dependencies
+var mochaPhantomjs = require('gulp-mocha-phantomjs');
+
+hbsfy.configure({
+  'extensions': ['hbs'],
+  'precompilerOptions': {
+    'knownHelpersOnly': false
+  }
 });
 
-// Compile JS
-gulp.task('scripts', function() {
-    return gulp.src('./app/scripts/*.js')
-        .pipe(concat('main.js'))
-        .pipe(gulp.dest('./dist/js'))
-        .pipe(browserSync.stream());
+//validate
+gulp.task('lint-client', function() {
+  return gulp.src('./app/scripts/**/*.js')
+    .pipe(jshint())
+    .pipe(jshint.reporter('default'));
 });
-
-// Compile Node Scripts
-gulp.task('browsify', function() {
-    return browserify('./dist/js/main.js')
-        .bundle()
-        .pipe(source('main.min.js'))
-        .pipe(buffer())
-        .pipe(uglify())
-        .pipe(gulp.dest('./dist/js'));
+gulp.task('lint-test', function() {
+  return gulp.src('./test/scripts/**/*.js')
+    .pipe(jshint())
+    .pipe(jshint.reporter('default'));
 });
+//validate
 
-// Compile Our Sass
-gulp.task('styles', function() {
-    return gulp.src('./app/styles/base.scss')
-        .pipe(sass({outputStyle: 'compressed'}))
-        .pipe(concat('main.min.css'))
-        .pipe(gulp.dest('./dist/css'))
-        .pipe(browserSync.stream());
+
+//Start App
+gulp.task('browserify-client', ['lint-client'], function() {
+  return gulp.src('./app/scripts/*.js')
+    .pipe(browserify({
+      insertGlobals: true,
+      transform: ['hbsfy']
+    }))
+    .pipe(rename('main.js'))
+    .pipe(gulp.dest('./dist/js'));
 });
+gulp.task('browserify-test', ['lint-test'], function() {
+  return gulp.src('./test/scripts/*-test.js')
+    .pipe(browserify({
+      insertGlobals: true,
+      transform: ['hbsfy']
+    }))
+    .pipe(rename('main.test.js'))
+    .pipe(gulp.dest('./dist/js'));
+});
+gulp.task('watch', ['browserify-client', 'browserify-test']);
+//Start App
 
-//trow html file
+
+//start Testing
+gulp.task('test', ['lint-test', 'browserify-test'], function() {
+  return gulp.src('./test/index-test.html')
+    .pipe(mochaPhantomjs())
+    .pipe(gulp.dest('./dist'));
+});
+//start Testing
+
+
+//start Assets
+gulp.task('minify', function() {
+  return gulp.src('./app/styles/*.scss')
+    .pipe(sass({
+      outputStyle: 'compressed'
+    }))
+    .pipe(concat('main.min.css'))
+    .pipe(gulp.dest('./dist/css'));
+});
+gulp.task('uglify', ['browserify-client'], function() {
+  return gulp.src('./dist/js/main.js')
+    .pipe(uglify())
+    .pipe(rename('main.min.js'))
+    .pipe(gulp.dest('./dist/js'));
+});
 gulp.task('html', function() {
-    return gulp.src('./app/index.html')
-        .pipe(gulp.dest('./dist'));
+  return gulp.src('./app/index.html')
+    .pipe(gulp.dest('./dist'));
 });
-
-//trow icons
 gulp.task('icon', function() {
-    return gulp.src('app/favicon.ico')
-      .pipe(gulp.dest('./dist'));
+  return gulp.src('app/favicon.ico')
+    .pipe(gulp.dest('./dist'));
 });
+gulp.task('images', function() {
+  return gulp.src('app/images/*')
+    .pipe(imagemin({
+      progressive: true,
+      interlaced: true
+    }))
+    .pipe(gulp.dest('./dist/images'));
+});
+gulp.task('build', ['uglify', 'minify', 'images', 'icon', 'html']);
+//start Assets
 
-// Static Server + watching scss/html files
-gulp.task('start', ['lint', 'styles', 'scripts', 'html', 'icon', 'browsify'], function() {
-    browserSync.init({
-        server: "dist"
-    });
-    gulp.watch("./app/scripts/*.js", ['scripts', 'browsify']);
-    gulp.watch("./app/styles/*.scss", ['styles']);
+
+gulp.task('default', ['build', 'watch'], function() {
+  browserSync.init({
+    server: "dist"
+  });
+  gulp.watch(['./app/scripts/*.js', './app/scripts/**/*.js', './app/scripts/template/*.hbs'], ['uglify']);
+  gulp.watch(["./app/styles/*.scss", "./app/styles/**/*.scss"], ['minify']);
+  gulp.watch(['./test/scripts/*-test.js', './test/scripts/**/*-test.js'], ['browserify-test']);
 });

@@ -4,4 +4,4 @@ var $ = require('jquery'),
     Backbone = require('backbone');
 Backbone.$ = $;
 
-console.log(Backbone);
+console.log('START');
