@@ -4,4 +4,8 @@ var $ = require('jquery'),
     Backbone = require('backbone');
 Backbone.$ = $;
 
-console.log('START');
+global.App = function(widgetEl, params) {
+    "use strict";
+
+    console.log(widgetEl, params, config);
+}
