@@ -47,7 +47,7 @@ gulp.task('browserify-client', ['lint-client'], function() {
       insertGlobals: true,
       transform: ['hbsfy']
     }))
-    .pipe(rename('main.js'))
+    .pipe(rename('main.min.js'))
     .pipe(gulp.dest('./dist/js'));
 });
 gulp.task('browserify-test', ['lint-test'], function() {
@@ -103,7 +103,7 @@ gulp.task('images', function() {
     }))
     .pipe(gulp.dest('./dist/images'));
 });
-gulp.task('build', ['uglify', 'minify', 'images', 'icon', 'html']);
+gulp.task('build', [/*'uglify',*/ 'minify', 'images', 'icon', 'html']);
 //start Assets
 
 
@@ -111,7 +111,7 @@ gulp.task('default', ['build', 'watch'], function() {
   browserSync.init({
     server: "dist"
   });
-  gulp.watch(['./app/scripts/*.js', './app/scripts/**/*.js', './app/scripts/template/*.hbs'], ['uglify']);
+  gulp.watch(['./app/scripts/*.js', './app/scripts/**/*.js', './app/scripts/template/*.hbs'], ['browserify-client'/*,'uglify'*/]);
   gulp.watch(["./app/styles/*.scss", "./app/styles/**/*.scss"], ['minify']);
   gulp.watch(['./test/scripts/*-test.js', './test/scripts/**/*-test.js'], ['browserify-test']);
 });
