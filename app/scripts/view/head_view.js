@@ -4,25 +4,83 @@ var $ = require('jquery'),
   Backbone = require('backbone');
 Backbone.$ = $;
 
-var headViewTemplate = require('./../template/head.hbs');
-
 module.exports = function(widget) {
   "use strict";
 
+  var HeadCollection = require('./../collection/head_collection.js')(widget), ItemHeadView = require('./../view/head_item_view.js')(widget), TextHeadView = require('./../view/head_text_view.js')(widget);
+
+  var headCollection = new HeadCollection();
+
   var HeadView = Backbone.View.extend({
-      el: $('.head'),
+    el: $('.head'),
 
-      initialize: function(){
-        this.render();
-      },
+    input: null,
 
-      render: function(){
-        this.$el.html( headViewTemplate );
+    template: require('./../template/head.hbs'),
+
+    initialize: function() {
+      headCollection.on('add', this.addOne, this);
+      headCollection.on('reset', this.addAll, this);
+      headCollection.fetch();
+
+      this.render();
+    },
+
+    events: {
+      'keypress #new-todo': 'createTodoOnEnter',
+      'keyup #new-todo': 'createTodoOnText'
+    },
+
+    createTodoOnEnter: function(e){
+      if(!this.input){ this.input = $(e.currentTarget); }
+
+      if ( e.which !== 13 || !this.input.val() ) {
+        this.changeText(this.input.val());
+        return;
+      }else{
+        headCollection.create(this.newAttributes());
+        this.input.val('');
       }
+    },
 
-    });
+    createTodoOnText: function(e){
+      if(!this.input){ this.input = $(e.currentTarget); }
+      this.changeText(this.input.val());
+    },
 
-    widget.headView = new HeadView();
+    changeText: function(text){
+      var textHeadView = new TextHeadView({model: text});
+      $('#text-list').html(textHeadView.render().el);
+    },
 
-    return widget.headView;
+    addOne: function(todo){
+      var itemHeadView = new ItemHeadView({model: todo});
+      $('#todo-list').append(itemHeadView.render().el);
+    },
+
+    addAll: function(){
+      headCollection.each(this.addOne, this);
+    },
+
+    newAttributes: function(){
+      return {
+        title: this.input.val(),
+        completed: false
+      }
+    },
+
+    render: function() {
+      var self = this;
+
+      this.$el.html(this.template()).promise().done(function() {
+        this.input = self.$el.find('#new-todo');
+        self.addAll();
+      });
+    }
+
+  });
+
+  widget.head = new HeadView();
+
+  return widget.head;
 };

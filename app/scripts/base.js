@@ -4,7 +4,9 @@ var $ = require('jquery'),
   Backbone = require('backbone');
 Backbone.$ = $;
 
-var mainViewTemplate = require('./template/main.hbs');
+var baseTemplate = require('./template/main.hbs');
+
+var configs = require('./../configs/site.json');
 
 global.App = function(widgetEl, params) {
   "use strict";
@@ -12,22 +14,25 @@ global.App = function(widgetEl, params) {
   var widget = {};
 
   widget.elm = widgetEl;
+  widget.str = 'test';
 
-  var MainView = Backbone.View.extend({
-    el: widget.elm,
+  var BaseView = Backbone.View.extend({
+    el: $(widget.elm),
 
     initialize: function() {
       this.render();
     },
 
     render: function() {
-      this.$el.html(mainViewTemplate).promise().done(function(){
-          require('./view/head_view.js')(widget);
+      this.$el.html(baseTemplate).promise().done(function() {
+        require('./view/head_view.js')(widget);
       });
     }
   });
 
-  widget.mainView = new MainView();
+  require('./helper/handlebars_helper.js');
+
+  widget.base = new BaseView();
 
   return widget;
 }
