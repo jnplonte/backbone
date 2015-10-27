@@ -7,7 +7,9 @@ Backbone.$ = $;
 module.exports = function(widget) {
   "use strict";
 
-  var HeadCollection = require('./../collection/head_collection.js')(widget), ItemHeadView = require('./../view/head_item_view.js')(widget), TextHeadView = require('./../view/head_text_view.js')(widget);
+  var HeadCollection = require('./../collection/head_collection.js')(widget),
+    ItemHeadView = require('./../view/head_item_view.js')(widget),
+    TextHeadView = require('./../view/head_text_view.js')(widget);
 
   var headCollection = new HeadCollection();
 
@@ -28,42 +30,69 @@ module.exports = function(widget) {
 
     events: {
       'keypress #new-todo': 'createTodoOnEnter',
-      'keyup #new-todo': 'createTodoOnText'
+      'keyup #new-todo': 'createTodoOnText',
+      "click a": "preventAnchor"
     },
 
-    createTodoOnEnter: function(e){
-      if(!this.input){ this.input = $(e.currentTarget); }
+    preventAnchor: function(e){
+      e.preventDefault();
+      var href = $(e.currentTarget).attr('href');
+      widget.serviceRoutes.navigate(href, true);
+    },
 
-      if ( e.which !== 13 || !this.input.val().trim() ) {
+    createTodoOnEnter: function(e) {
+      if (!this.input) {
+        this.input = $(e.currentTarget);
+      }
+
+      if (e.which !== 13 || !this.input.val().trim()) {
         this.changeText(this.input.val().trim());
         return;
-      }else{
+      } else {
         headCollection.create(this.newAttributes());
         this.input.val('');
       }
     },
 
-    createTodoOnText: function(e){
-      if(!this.input){ this.input = $(e.currentTarget); }
-      
+    createTodoOnText: function(e) {
+      if (!this.input) {
+        this.input = $(e.currentTarget);
+      }
+
       this.changeText(this.input.val().trim());
     },
 
-    changeText: function(text){
-      var textHeadView = new TextHeadView({model: text});
+    changeText: function(text) {
+      var textHeadView = new TextHeadView({
+        model: text
+      });
       $('#text-list').html(textHeadView.render().el);
     },
 
-    addOne: function(todo){
-      var itemHeadView = new ItemHeadView({model: todo});
+    addOne: function(todo) {
+      var itemHeadView = new ItemHeadView({
+        model: todo
+      });
       $('#todo-list').append(itemHeadView.render().el);
     },
 
-    addAll: function(){
-      headCollection.each(this.addOne, this);
+    addAll: function() {
+      this.$el.find('#todo-list').html('');
+
+      switch (widget.fltr) {
+        case 'pending':
+          _.each(headCollection.remaining(), this.addOne);
+          break;
+        case 'completed':
+          _.each(headCollection.completed(), this.addOne);
+          break;
+        default:
+          headCollection.each(this.addOne, this);
+          break;
+      }
     },
 
-    newAttributes: function(){
+    newAttributes: function() {
       return {
         title: this.input.val().trim(),
         completed: false

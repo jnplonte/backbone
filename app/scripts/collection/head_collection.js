@@ -12,7 +12,18 @@ module.exports = function(widget) {
 
   var HeadCollection = Backbone.Collection.extend({
     model: HeadModel,
-    localStorage: new Backbone.LocalStorage(widget.str)
+
+    localStorage: new Backbone.LocalStorage(widget.str),
+
+    completed: function() {
+      return this.filter(function(todo) {
+        return todo.get('completed');
+      });
+    },
+
+    remaining: function() {
+      return this.without.apply(this, this.completed());
+    }
   });
 
   return HeadCollection;

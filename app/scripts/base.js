@@ -15,6 +15,7 @@ global.App = function(widgetEl, params) {
 
   widget.elm = widgetEl;
   widget.str = 'test';
+  widget.fltr= null;
 
   var BaseView = Backbone.View.extend({
     el: $(widget.elm),
@@ -26,6 +27,7 @@ global.App = function(widgetEl, params) {
     render: function() {
       this.$el.html(baseTemplate).promise().done(function() {
         require('./view/head_view.js')(widget);
+        require('./service/routes.js')(widget);
       });
     }
   });
