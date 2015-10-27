@@ -1,0 +1,15 @@
+#todo-list {
+  input.edit {
+    display: none;
+  }
+
+  .editing {
+    label {
+      display: none;
+    }
+
+    input.edit {
+      display: inline;
+    }
+  }
+}

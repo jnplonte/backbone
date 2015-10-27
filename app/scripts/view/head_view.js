@@ -34,8 +34,8 @@ module.exports = function(widget) {
     createTodoOnEnter: function(e){
       if(!this.input){ this.input = $(e.currentTarget); }
 
-      if ( e.which !== 13 || !this.input.val() ) {
-        this.changeText(this.input.val());
+      if ( e.which !== 13 || !this.input.val().trim() ) {
+        this.changeText(this.input.val().trim());
         return;
       }else{
         headCollection.create(this.newAttributes());
@@ -45,7 +45,8 @@ module.exports = function(widget) {
 
     createTodoOnText: function(e){
       if(!this.input){ this.input = $(e.currentTarget); }
-      this.changeText(this.input.val());
+      
+      this.changeText(this.input.val().trim());
     },
 
     changeText: function(text){
@@ -64,7 +65,7 @@ module.exports = function(widget) {
 
     newAttributes: function(){
       return {
-        title: this.input.val(),
+        title: this.input.val().trim(),
         completed: false
       }
     },
@@ -73,7 +74,7 @@ module.exports = function(widget) {
       var self = this;
 
       this.$el.html(this.template()).promise().done(function() {
-        this.input = self.$el.find('#new-todo');
+        self.input = self.$el.find('#new-todo');
         self.addAll();
       });
     }
