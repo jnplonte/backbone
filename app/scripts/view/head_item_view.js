@@ -26,7 +26,17 @@ module.exports = function(widget) {
       'dblclick label': 'edit',
       'keypress .edit': 'updateOnEnter',
       'blur .edit': 'close',
-      'click .destroy': 'destroy'
+      'click .destroy': 'destroy',
+      'change .toggle': 'complete'
+    },
+
+    complete: function(e){
+      var value = this.$el.find('.toggle').is(':checked');
+      this.model.save({
+        completed: value
+      });
+
+      widget.head.addAll();
     },
 
     edit: function(e) {

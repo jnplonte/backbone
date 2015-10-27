@@ -34,7 +34,7 @@ module.exports = function(widget) {
       "click a": "preventAnchor"
     },
 
-    preventAnchor: function(e){
+    preventAnchor: function(e) {
       e.preventDefault();
       var href = $(e.currentTarget).attr('href');
       widget.serviceRoutes.navigate(href, true);
@@ -50,6 +50,8 @@ module.exports = function(widget) {
         return;
       } else {
         headCollection.create(this.newAttributes());
+
+        widget.serviceRoutes.navigate('/', true);
         this.input.val('');
       }
     },
@@ -73,6 +75,7 @@ module.exports = function(widget) {
       var itemHeadView = new ItemHeadView({
         model: todo
       });
+
       $('#todo-list').append(itemHeadView.render().el);
     },
 
